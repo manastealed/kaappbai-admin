@@ -115,9 +115,9 @@
                     const firestore = firebase.firestore();
 
                     function loadAppointmentsToday() {
-                        console.log('Function loadAppointmentsToday called');  // Add this line
+                        console.log('Function loadAppointmentsToday called');  
                         firebase.auth().onAuthStateChanged((user) => {
-                            console.log('Auth state changed');  // Add this line
+                            console.log('Auth state changed');  
                             if (user) {
                                 const today = new Date();
                                 const startDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
@@ -133,14 +133,14 @@
                                         // Clear previous content
                                         appointmentsContainer.innerHTML = '';
 
-                                        if (querySnapshot.empty) {
-                                            // Display a message when there are no appointments for today
+                                        let appointmentsFound = false;
 
-                                          console.log('no data available'); 
+                                        if (querySnapshot.empty) {
+                                            console.log('no data available');
                                             appointmentsContainer.innerHTML = '<tr><td colspan="4">There are no appointments set for today.</td></tr>';
                                         } else {
                                             querySnapshot.forEach((doc, index) => {
-                                              console.log('data available'); 
+                                                console.log('data available');
                                                 const appointmentData = doc.data();
 
                                                 // Convert string date to JavaScript Date
@@ -159,11 +159,15 @@
                                                             <td>${appointmentData.notes}</td>
                                                         </tr>
                                                     `;
+
+                                                    appointmentsFound = true;
                                                 }
-                                              else{
-                                                appointmentsContainer.innerHTML = '<tr><td colspan="4">There are no appointments set for today.</td></tr>';
-                                              }
                                             });
+
+                                            // Set the message if no appointments were found for today
+                                            if (!appointmentsFound) {
+                                                appointmentsContainer.innerHTML = '<tr><td colspan="4">There are no appointments set for today.</td></tr>';
+                                            }
                                         }
                                     })
                                     .catch((error) => {
