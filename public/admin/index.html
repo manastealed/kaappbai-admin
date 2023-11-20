@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="Mark Otto, Jacob Thornton, and Bootstrap contributors">
+    <meta name="generator" content="Hugo 0.104.2">
+    <title>Dashboard</title>
+
+    <!-- Stylesheets -->
+    <link href="../assets/css/style.css" rel="stylesheet">
+    <link href="../assets/css/dashboard.css" rel="stylesheet">
+
+    <!-- Firebase configuration -->
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-auth.js"></script>
+
+    <style>
+        .appointment-table tbody tr:nth-child(even) {
+            background-color: #f8f9fa; /* Even row color */
+        }
+
+        .appointment-table tbody tr:nth-child(odd) {
+            background-color: #343a40; /* Odd row color */
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <header class="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0 shadow">
+        <a class="navbar-brand col-md-3 col-lg-2 me-0 px-3 fs-6" href="#">KaAppBai Admin</a>
+        <button class="navbar-toggler position-absolute d-md-none collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <input class="form-control form-control-dark w-100 rounded-0 border-0" type="text" placeholder="Search" aria-label="Search">
+        <div class="navbar-nav">
+            <div class="nav-item text-nowrap">
+                <a class="nav-link px-3" href="../index.html">Sign out</a>
+            </div>
+        </div>
+    </header>
+
+    <div class="container-fluid">
+        <div class="row">
+            <nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse">
+                <div class="position-sticky pt-3 sidebar-sticky">
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link active" aria-current="page" href="#">
+                                <span data-feather="home" class="align-text-bottom"></span>
+                                Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="./appointment.html">
+                                <span data-feather="file" class="align-text-bottom"></span>
+                                Appointment Requests
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h1 class="h2">Dashboard</h1>
+                    <div class="btn-toolbar mb-2 mb-md-0">
+                        <div class="btn-group me-2">
+                            <button type="button" class="btn btn-sm btn-outline-secondary">Share</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary">Export</button>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle">
+                            <span data-feather="calendar" class="align-text-bottom"></span>
+                            This week
+                        </button>
+                    </div>
+                </div>
+
+                <h3 class="h2">Hi Admin, Welcome</h3>
+
+                <table class="table table-dark appointment-table">
+                    <thead>
+                        <tr>
+                            <th scope="col">Name</th>
+                            <th scope="col">Date of Appointment</th>
+                            <th scope="col">Time of Appointment</th>
+                            <th scope="col">Notes</th>
+                        </tr>
+                    </thead>
+                    <tbody id="appointments_today_container"></tbody>
+                </table>
+
+                <script>
+                    // Initialize Firebase if not already initialized
+                    if (!firebase.apps.length) {
+                        const firebaseConfig = {
+                            apiKey: "AIzaSyAIF6nLqmxJNSDDIkowszT5-WPa5p-c3AQ",
+                            authDomain: "kaappbai.firebaseapp.com",
+                            projectId: "kaappbai",
+                            storageBucket: "kaappbai.appspot.com",
+                            messagingSenderId: "771116900014",
+                            appId: "1:771116900014:web:786d476e5c6011c234173f",
+                            measurementId: "G-THDRFEXG6P"
+                        };
+
+                        firebase.initializeApp(firebaseConfig);
+                        console.log("Firebase initialized successfully");
+                    }
+
+                    const firestore = firebase.firestore();
+
+                    function loadAppointmentsToday() {
+                        console.log('Function loadAppointmentsToday called');  // Add this line
+                        firebase.auth().onAuthStateChanged((user) => {
+                            console.log('Auth state changed');  // Add this line
+                            if (user) {
+                                const today = new Date();
+                                const startDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+                                const endDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
+
+                                firestore.collection('appointments')
+                                    .get()
+                                    .then((querySnapshot) => {
+                                        console.log("Query Snapshot:", querySnapshot);
+
+                                        const appointmentsContainer = document.getElementById('appointments_today_container');
+
+                                        // Clear previous content
+                                        appointmentsContainer.innerHTML = '';
+
+                                        if (querySnapshot.empty) {
+                                            // Display a message when there are no appointments for today
+
+                                          console.log('no data available'); 
+                                            appointmentsContainer.innerHTML = '<tr><td colspan="4">There are no appointments set for today.</td></tr>';
+                                        } else {
+                                            querySnapshot.forEach((doc, index) => {
+                                              console.log('data available'); 
+                                                const appointmentData = doc.data();
+
+                                                // Convert string date to JavaScript Date
+                                                const dateString = appointmentData['date of appointment'];
+                                                const dateOfAppointment = new Date(dateString);
+
+                                                // Check if the date is within the specified range
+                                                if (dateOfAppointment >= startDate && dateOfAppointment < endDate) {
+                                                    // Add a row to the table for each appointment with alternating background color
+                                                    const rowColor = index % 2 === 0 ? 'bg-light' : 'bg-dark';
+                                                    appointmentsContainer.innerHTML += `
+                                                        <tr class="${rowColor}">
+                                                            <td>${appointmentData.name}</td>
+                                                            <td>${appointmentData['date of appointment']}</td>
+                                                            <td>${appointmentData['time of appointment']}</td>
+                                                            <td>${appointmentData.notes}</td>
+                                                        </tr>
+                                                    `;
+                                                }
+                                              else{
+                                                appointmentsContainer.innerHTML = '<tr><td colspan="4">There are no appointments set for today.</td></tr>';
+                                              }
+                                            });
+                                        }
+                                    })
+                                    .catch((error) => {
+                                        console.error('Error getting appointments:', error);
+                                    });
+                            } else {
+                                console.log('User is not signed in');
+                            }
+                        });
+                    }
+
+                    document.addEventListener('DOMContentLoaded', function () {
+                        loadAppointmentsToday();
+                    });
+                </script>
+
+            </main>
+        </div>
+    </div>
+
+    <script src="../assets/js/app.js"></script>
+    <script src="../assets/js/firebase.js"></script>
+
+</body>
+
+</html>
