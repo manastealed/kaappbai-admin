@@ -136,10 +136,12 @@
                                         let appointmentsFound = false;
 
                                         if (querySnapshot.empty) {
+                                            appointmentsContainer.innerHTML = '';
                                             console.log('no data available');
                                             appointmentsContainer.innerHTML = '<tr><td colspan="4">There are no appointments set for today.</td></tr>';
                                         } else {
                                             querySnapshot.forEach((doc, index) => {
+                                                appointmentsContainer.innerHTML = '';
                                                 console.log('data available');
                                                 const appointmentData = doc.data();
 
